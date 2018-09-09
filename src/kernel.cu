@@ -231,12 +231,12 @@ void Boids::copyBoidsToVBO(float *vbodptr_positions, float *vbodptr_velocities) 
 */
 __device__ glm::vec3 computeVelocityChange(int N, int iSelf, const glm::vec3 *pos, const glm::vec3 *vel) {
   // Rule 1: boids fly towards their local perceived center of mass, which excludes themselves
-
+  // Rule 2: boids try to stay a distance d away from each other
 	glm::vec3 perceived_center = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec3 c = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec3 perceived_velocity = glm::vec3(0.0f, 0.0f, 0.0f);
-	int flag1 = 0;
-	int flag2 = 0;
+	int flag1, flag2 = 0;
+
 	for (int i = 0; i < N; ++i)
 	{
 		if (i != iSelf)
@@ -259,18 +259,29 @@ __device__ glm::vec3 computeVelocityChange(int N, int iSelf, const glm::vec3 *po
 				++flag2;
 			}
 		}
-		//if ((i != iSelf) && (glm::distance(pos[i], pos[iSelf]) < rule1Distance))
-		//{
-		//	perceived_center += pos[i];
-		//}
 	}
-	perceived_center /= flag1;
-	glm::vec3 m_result1 = glm::vec3(0.0f, 0.0f, 0.0f);
-	m_result1 = (perceived_center - pos[iSelf]) * rule1Scale;
-	perceived_velocity /= flag2;
+	if (flag1 > 0)
+	{
+		perceived_center /= (float)flag1;
+	}
+	else
+	{
+		perceived_center = pos[iSelf];
+	}
+	
+	if (flag2 > 0)
+	{
+		perceived_velocity /= (float)flag2; 
+	}
+	else
+	{
+		perceived_velocity = vel[iSelf];
+	}
+
+	glm::vec3 m_result1 = (perceived_center - pos[iSelf]) * rule1Scale;
 	glm::vec3 m_result2 = c * rule2Scale;
 	glm::vec3 m_result3 = perceived_velocity * rule3Scale;
-	// Rule 2: boids try to stay a distance d away from each other
+	
 	return m_result1 + m_result2 + m_result3;
 }
 
@@ -284,7 +295,7 @@ __global__ void kernUpdateVelocityBruteForce(int N, glm::vec3 *pos,
 	int index = (blockIdx.x * blockDim.x) + threadIdx.x;
 	if (index > N) return;
 	glm::vec3 new_velocity = computeVelocityChange(N, index, pos, vel1) + vel1[index];
-	glm::clamp(new_velocity, glm::vec3(0.0f), glm::vec3(1.0f) * maxSpeed);
+	new_velocity = glm::clamp(new_velocity, glm::vec3(0.0f), glm::vec3(1.0f) * maxSpeed);
 	vel2[index] = new_velocity;
   // Compute a new velocity based on pos and vel1
   // Clamp the speed
