@@ -7,4 +7,4 @@ Project 1 - Flocking**
 
 ### Screenshot of flocking boids
 
-![](images/1.png)
+![](images/2.png)
