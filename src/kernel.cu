@@ -201,8 +201,8 @@ void Boids::initSimulation(int N) {
 	cudaMalloc((void**)&dev_coherentVel1, N * sizeof(glm::vec3));
 	checkCUDAErrorWithLine("cudaMalloc dev_coherentVel1 failed!");
 
-	dev_thrust_particleArrayIndices = thrust::device_ptr<int>(dev_particleArrayIndices);
-	dev_thrust_particleGridIndices = thrust::device_ptr<int>(dev_particleGridIndices);
+	dev_thrust_particleArrayIndices = thrust::device_pointer_cast<int>(dev_particleArrayIndices);
+	dev_thrust_particleGridIndices = thrust::device_pointer_cast<int>(dev_particleGridIndices);
 
   cudaDeviceSynchronize();
 }
@@ -528,7 +528,7 @@ __global__ void kernUpdateVelNeighborSearchScattered(
 		glm::vec3 m_result = (perceived_center - pos[particleIdx]) * rule1Scale + c * rule2Scale + perceived_velocity * rule3Scale;
 
 		if (glm::length(m_result) > maxSpeed) m_result = glm::normalize(m_result) * maxSpeed;
-		vel2[index] = m_result;
+		vel2[particleIdx] = m_result;
 	}
 }
 
