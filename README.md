@@ -7,4 +7,11 @@ Project 1 - Flocking**
 
 ### Screenshot of flocking boids
 
-![](images/2.png)
+![](images/5.png)
+### Performance Analysis
+
+*Framerate change with increasing number of boids
+![](images/3.png)
+
+*Framerate change with increasing block size in 5000 boids
+![](images/4.png)
